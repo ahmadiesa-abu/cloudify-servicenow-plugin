@@ -1,0 +1,25 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+imports:
+  - http://cloudify.co/spec/cloudify/6.3.1/types.yaml
+  - plugin:cloudify-servicenow-plugin
+
+inputs:
+  host_name:
+    type: string
+    default: 'dev101290.service-now.com'
+
+dsl_definitions:
+
+  servicenow_config: &servicenow_config
+    snow_host: {get_input: host_name}
+    snow_username: {get_secret: snow_user}
+    snow_password: {get_secret: snow_password}
+    snow_client_id: {get_secret: snow_client_id}
+    snow_client_secret: {get_secret: snow_client_secret}
+
+node_templates:
+  my_requeted_items:
+    type: cloudify.nodes.snow.linux_server
+    properties:
+      client_config: *servicenow_config

@@ -1,0 +1,58 @@
+plugins:
+  snow:
+    executor: central_deployment_agent
+    package_name: cloudify-servicenow-plugin
+    package_version: '0.1'
+
+
+dsl_definitions:
+
+  client_config: &client_config
+    client_config:
+      type: cloudify.types.snow.ClientConfig
+      description: Your Service Now client configuration.
+      required: true
+
+data_types:
+
+  # in the config there are 2 methods to authenticate [username & password] or
+  # [client_id & client_secret]
+  cloudify.types.snow.ClientConfig:
+    properties:
+      snow_host:
+        description: servicenow instance host.
+        type: string
+        default: ''
+        required: true
+      snow_username:
+        description: servicenow instance username.
+        type: string
+        default: ''
+      snow_password:
+        description: servicnow instance password.
+        type: string
+        default: ''
+      snow_client_id:
+        description: servicnow instance client_id for oauth2.
+        type: string
+        default: ''
+      snow_client_secret:
+        description: servicnow instance client_secret for oauth2.
+        type: string
+        default: ''
+
+node_types:
+
+  cloudify.nodes.snow.linux_server:
+    derived_from: cloudify.nodes.Root
+    properties:
+      <<: *client_config
+      resource_config:
+        description: >
+          Configuration key-value data to be passed as-is to the corresponding
+          CI setup values.
+        required: true
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: snow.cloudify_snow.tasks.create_ci
