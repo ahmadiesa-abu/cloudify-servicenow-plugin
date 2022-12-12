@@ -2,7 +2,7 @@ plugins:
   snow:
     executor: central_deployment_agent
     package_name: cloudify-servicenow-plugin
-    package_version: '0.1'
+    package_version: '1.0.0'
 
 
 dsl_definitions:
@@ -41,9 +41,66 @@ data_types:
         type: string
         default: ''
 
+  cloudify.types.snow.Environment:
+    properties:
+      deployment:
+        blueprint_id:
+          description: cloudify blueprint.
+          type: string
+          required: true
+        name:
+          description: cloudify deployment name.
+          type: string
+          required: true
+        inputs:
+          #type: list
+          description: >
+            cloudify deployment inputs -Array of Dicts- [
+              {
+                'input_name': 'some_var_name',
+                'input_value':'some_var_value',
+                'input_type': 'string' # ['string', 'integer', 'float', 'list', 'dict'] -> basic Cloudify types
+              }].
+          default: []
+        labels:
+          #type: list
+          description: >
+            cloudify deployment labels -Array of Dicts- [
+              {
+                'label_name': 'some_label_name',
+                'label_value':'some_label_value',
+              }].
+          default: []
+        config_name:
+          description: cloudify servicenow application config name.
+          type: string
+          required: true
+        ask_for_approval:
+          description: ask for user manager approval.
+          type: boolean
+          default: false
+          required: false
+
 node_types:
 
-  cloudify.nodes.snow.linux_server:
+  cloudify.nodes.snow.CloudifyEnvironment:
+    derived_from: cloudify.nodes.Root
+     properties:
+      <<: *client_config
+      resource_config:
+        type: Environment
+        description: >
+          Cloudify environment specific properties.
+        required: true
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: snow.cloudify_snow.tasks.create_environment
+        delete:
+          implementation: snow.cloudify_snow.tasks.delete_environment
+
+
+  cloudify.nodes.snow.Server:
     derived_from: cloudify.nodes.Root
     properties:
       <<: *client_config
@@ -56,3 +113,14 @@ node_types:
       cloudify.interfaces.lifecycle:
         create:
           implementation: snow.cloudify_snow.tasks.create_ci
+        delete:
+          implementation: snow.cloudify_snow.tasks.delete_ci
+
+  cloudify.nodes.snow.LinuxServer:
+    derived_from: cloudify.nodes.snow.Server
+
+  cloudify.nodes.snow.UnixServer:
+    derived_from: cloudify.nodes.Root
+
+  cloudify.nodes.snow.WindowsServer:
+    derived_from: cloudify.nodes.Root
